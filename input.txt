@@ -1,11 +1,8 @@
 <kurs-java>
-    <artykul publikacja=”2017-03-01”>
+    <artykul publikacja="2017-03-01">
         <tytul>Wprowadzenie do XML w Javie</tytul>
         <autor>Marcin Pietraszek</autor> 
-    </artykul> 
-    <artykul> 
-        <!-- do uzupelnienia --> 
     </artykul>
-    <opis status=”do uzupelnienia”/>
-    <wydawca:opis>Zestaw artykułów dotyczących programowania w języku Java</wydawca:opis>
+    <opis status="do uzupelnienia"/>
+    <wydawca:opis>Zestaw artykulow dotyczacych programowania w jezyku Java</wydawca:opis>
 </kurs-java>

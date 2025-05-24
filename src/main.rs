@@ -1,4 +1,4 @@
-mod utils;
+
 mod parser;
 mod emitter;
 use std::fs::File;

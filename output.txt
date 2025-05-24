@@ -1,0 +1,29 @@
+{"type":"start_element","name":"kurs-java","attributes":{}}
+{"type":"text","content":"
+    "}
+{"type":"start_element","name":"artykul","attributes":{"publikacja":""2017-03-01""}}
+{"type":"text","content":"
+        "}
+{"type":"start_element","name":"tytul","attributes":{}}
+{"type":"text","content":"Wprowadzenie do XML w Javie"}
+{"type":"end_element","name":"tytul"}
+{"type":"text","content":"
+        "}
+{"type":"start_element","name":"autor","attributes":{}}
+{"type":"text","content":"Marcin Pietraszek"}
+{"type":"end_element","name":"autor"}
+{"type":"text","content":" 
+    "}
+{"type":"end_element","name":"artykul"}
+{"type":"text","content":"
+    "}
+{"type":"start_element","name":"opis","attributes":{"status":""do"}}
+{"type":"end_element","name":"opis"}
+{"type":"text","content":"
+    "}
+{"type":"start_element","name":"wydawca:opis","attributes":{}}
+{"type":"text","content":"Zestaw artykulow dotyczacych programowania w jezyku Java"}
+{"type":"end_element","name":"wydawca:opis"}
+{"type":"text","content":"
+"}
+{"type":"end_element","name":"kurs-java"}

@@ -18,9 +18,11 @@ pub fn start_tag<W: Write>(
     )
 }
 
-pub fn end_tag(){}
+pub fn end_tag<W: Write>(writer: &mut W, name: &str) -> std::io::Result<()> {
+    writeln!(writer, r#"{{"type":"end_element","name":"{}"}}"#, name)
+}
 
 
-pub fn text(){
-
+pub fn text<W: Write>(writer: &mut W, text: &str) -> std::io::Result<()>{
+    writeln!(writer, r#"{{"type":"text","content":"{}"}}"#, text)
 }

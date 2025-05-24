@@ -31,13 +31,14 @@ pub fn start_parsing(reader : &mut BufReader<File>, writer : &mut BufWriter<File
         if c == '<' {
             is_inside_tag = true;
             if !buff_text.is_empty() {
-                emitter::text();
+                emitter::text(writer, &buff_text);
                 buff_text.clear();
             }
         }
         else if c == '>' {
             is_inside_tag = false;
             process_tag(&buff_tag, writer);
+            buff_tag.clear();
         }
         else if is_inside_tag{
             buff_tag.push(c);
@@ -50,23 +51,23 @@ pub fn start_parsing(reader : &mut BufReader<File>, writer : &mut BufWriter<File
 }
 
 fn process_tag(buff_tag : &String, writer : &mut BufWriter<File>){
-    let mut parts = buff_tag.split_whitespace().collect::<Vec<&String>>();
+    let mut parts = buff_tag.split_whitespace().collect::<Vec<&str>>();
 
-    if buff_tag.starts_with('/') {
-        emitter::end_tag();
+    if buff_tag.starts_with('/') { //np </div>
+        emitter::end_tag(writer, &buff_tag[1..]);
     }
-    else if buff_tag.ends_with('/') {
+    else if buff_tag.ends_with('/') { // <img src="" alt="" />
         let attr = get_attributes(&parts[1..parts.len()-1]);
         emitter::start_tag(writer, &parts[0], &attr);
-        emitter::end_tag();
+        emitter::end_tag(writer, &parts[0]);
     }
-    else{
+    else{ // <div id="">
         let attr = get_attributes(&parts[1..parts.len()]);
         emitter::start_tag(writer, &parts[0], &attr);
     }
 }
 
-fn get_attributes(parts : &[&String]) -> HashMap<String,String>{
+fn get_attributes(parts : &[&str]) -> HashMap<String,String>{
     let mut map : HashMap<String,String> = HashMap::new();
 
     for part in parts{
