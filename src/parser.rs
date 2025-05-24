@@ -28,9 +28,13 @@ pub fn start_parsing(reader : &mut BufReader<File>, writer : &mut BufWriter<File
     for byte in reader.bytes() {
         let c = byte.unwrap() as char;
 
+        if c == '\n' || c == '\r' || c == '\t' {
+            continue;
+        }
+
         if c == '<' {
             is_inside_tag = true;
-            if !buff_text.is_empty() {
+            if !buff_text.trim().is_empty() {
                 emitter::text(writer, &buff_text);
                 buff_text.clear();
             }
@@ -57,7 +61,7 @@ fn process_tag(buff_tag : &String, writer : &mut BufWriter<File>){
         emitter::end_tag(writer, &buff_tag[1..]);
     }
     else if buff_tag.ends_with('/') { // <img src="" alt="" />
-        let attr = get_attributes(&parts[1..parts.len()-1]);
+        let attr = get_attributes(&parts[1..parts.len()]);
         emitter::start_tag(writer, &parts[0], &attr);
         emitter::end_tag(writer, &parts[0]);
     }
