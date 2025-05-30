@@ -21,3 +21,7 @@
 *.rlib
 *.o
 *.a
+
+psd7003.xml
+dblp.xml
+treebank_e.xml

@@ -3,20 +3,6 @@ use std::fs::File;
 use std::io::{BufReader, BufWriter, Read};
 use crate::emitter;
 
-// #[derive(Debug, PartialEq)]
-// enum ParserState {
-//     // OutsideTag,
-//     // InsideTag,
-//     Initial,
-//     StartTag,
-//     EndTag,
-//     InsideText,
-//     TagName,
-//     AttributeName,
-//     AttributeValue,
-//     SelfClosingCheck,
-//     Comment,
-// }
 
 pub fn start_parsing(reader : &mut BufReader<File>, writer : &mut BufWriter<File>){
 
@@ -34,7 +20,7 @@ pub fn start_parsing(reader : &mut BufReader<File>, writer : &mut BufWriter<File
 
         if c == '<' {
             is_inside_tag = true;
-            if !buff_text.trim().is_empty() {
+            if !buff_text.is_empty() {
                 emitter::text(writer, &buff_text);
                 buff_text.clear();
             }
