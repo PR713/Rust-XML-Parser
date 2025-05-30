@@ -13,7 +13,6 @@ use sysinfo::{Pid, System};
 
 mod parser;
 mod emitter;
-mod cow_parser;
 
 fn run_benchmark<F>(name: &str, f: F) -> Result<Duration, Box<dyn Error>>
 where
@@ -76,55 +75,31 @@ where
     let memory_used_kb = final_max_memory.saturating_sub(initial_memory);
 
     // Wydruk wyników
-    println!("\n╔══════════════════════════════╗");
+    println!("\n╔═════════════════════════════════════════════════════════════════════╗");
     println!("║ {:^26} ║", name);
-    println!("╠══════════════════════════════╣");
-    println!("║ {:<12}: {:>10.2?}    ║", "Time", duration);
-    println!("║ {:<12}: {:>10} KB    ║", "RAM Memory (diff between the start and the end", memory_used_kb);
-    println!("║                      ║" );
-    println!("║ {:<12}: {:>10} KB    ║", "Peak RAM", final_max_memory);
-    println!("╚══════════════════════════════╝");
+    println!("╠═════════════════════════════════════════════════════════════════════");
+    println!("║ {:<12}: {:>10.2?}                                                   ", "Time", duration);
+    println!("║ {:<12}: {:>10} KB   ", "RAM Memory (diff between the start and the end", memory_used_kb);
+    println!("║                                                                     " );
+    println!("║ {:<12}: {:>10} KB                                                   ", "Peak RAM", final_max_memory);
+    println!("╚═════════════════════════════════════════════════════════════════════╝");
 
     result.map(|_| duration)
 }
 
 
 fn my_parser(input_path: &str, output_path: &str) -> std::io::Result<()> {
-    let start = Instant::now();
-
-    // plik wejściowy
     let input_file = File::open(input_path)?;
     let mut reader = BufReader::new(input_file);
 
-    // plik wyjściowy
     let output_file = File::create(output_path)?;
     let mut writer = BufWriter::new(output_file);
 
     parser::start_parsing(&mut reader, &mut writer);
-    let duration = start.elapsed();
-    println!("Elapsed time: {:.2?}", duration);
-    Ok(())
-}
-
-fn cow_parser(input_path: &str, output_path: &str) -> std::io::Result<()> {
-    let start = Instant::now();
-
-    // plik wejściowy
-    let input_file = File::open(input_path)?;
-    let mut reader = BufReader::new(input_file);
-
-    // plik wyjściowy
-    let output_file = File::create(output_path)?;
-    let mut writer = BufWriter::new(output_file);
-
-    cow_parser::start_parsing_cow(&mut reader, &mut writer);
-    let duration = start.elapsed();
-    println!("Elapsed time: {:.2?}", duration);
     Ok(())
 }
 
 fn xml_rs(input_path: &str, output_path: &str) -> Result<(), Box<dyn std::error::Error>> {
-    let start = Instant::now();
     let file = File::open(input_path)?;
     let file = BufReader::new(file);
 
@@ -154,14 +129,10 @@ fn xml_rs(input_path: &str, output_path: &str) -> Result<(), Box<dyn std::error:
             _ => {}
         }
     }
-    let duration = start.elapsed();
-    println!("XML-rs: Elapsed time: {:.2?}", duration);
-
     Ok(())
 }
 
 fn quick_xml(input_path: &str, output_path: &str) -> Result<(), Box<dyn std::error::Error>> {
-    let start = Instant::now();
     let file = File::open(input_path)?;
     let mut reader = Reader::from_reader(BufReader::new(file));
     reader.trim_text(true);
@@ -222,8 +193,6 @@ fn quick_xml(input_path: &str, output_path: &str) -> Result<(), Box<dyn std::err
             }
 
             Ok(Event::Eof) => {
-                let duration = start.elapsed();
-                println!("quick-xml: Elapsed time: {:.2?}", duration);
                 return Ok(())
             },
             Err(e) => return Err(Box::new(e)),
@@ -235,8 +204,6 @@ fn quick_xml(input_path: &str, output_path: &str) -> Result<(), Box<dyn std::err
 }
 
 fn parse_xml_cow(input_path: &str, output_path: &str) -> std::io::Result<()> {
-    let start = Instant::now();
-
     let input_file = File::open(input_path)?;
     let output_file = File::create(output_path)?;
 
@@ -357,29 +324,96 @@ fn parse_xml_cow(input_path: &str, output_path: &str) -> std::io::Result<()> {
             }
         }
     }
+    Ok(())
+}
 
-    let duration = start.elapsed();
-    println!("COW: Elapsed time: {:.2?}", duration);
+
+fn parse_xml_cow_optimized(input_path: &str, output_path: &str) -> std::io::Result<()> {
+    let input_file = File::open(input_path)?;
+    let output_file = File::create(output_path)?;
+    let reader = BufReader::new(input_file);
+    let mut writer = BufWriter::new(output_file);
+
+    for line_result in reader.lines() {
+        let mut line = line_result?;
+        let mut chars = line.char_indices().peekable();
+
+        while let Some((i, c)) = chars.next() {
+            if c == '<' {
+                let mut tag_buffer = String::new();
+                tag_buffer.push(c);
+
+                // Zbieranie całego tagu
+                while let Some((_, next_c)) = chars.next() {
+                    tag_buffer.push(next_c);
+                    if next_c == '>' {
+                        break;
+                    }
+                }
+
+                // Przetwarzanie tagu
+                let tag_str = tag_buffer.trim();
+                if tag_str.starts_with("</") {
+                    // Zamykający tag
+                    writeln!(writer, "End: {}", tag_str)?;
+                } else {
+                    // Otwierający lub pusty tag
+                    let inside = &tag_str[1..tag_str.len() - 1]; // bez < i >
+                    let mut parts = inside.split_whitespace();
+                    if let Some(tag_name) = parts.next() {
+                        let mut attributes = String::new();
+                        for attr in parts {
+                            attributes.push_str(attr);
+                            attributes.push(' ');
+                        }
+                        attributes = attributes.trim().to_string();
+                        if !attributes.is_empty() {
+                            writeln!(writer, "Start: <{}> [{}]", tag_name, attributes)?;
+                        } else {
+                            writeln!(writer, "Start: <{}>", tag_name)?;
+                        }
+                    }
+                }
+            } else {
+                // Tekst między tagami
+                let text_start = i;
+                let mut text_end = i + c.len_utf8();
+                while let Some(&(j, next_c)) = chars.peek() {
+                    if next_c == '<' {
+                        break;
+                    }
+                    text_end = j + next_c.len_utf8();
+                    chars.next(); // consume
+                }
+
+                let text = line[text_start..text_end].trim();
+                if !text.is_empty() {
+                    let text_cow: Cow<str> = Cow::Borrowed(text);
+                    writeln!(writer, "Text: {}", text_cow)?;
+                }
+            }
+        }
+    }
     Ok(())
 }
 
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let input_path = "nasa.xml";
+    let input_path = "treebank_e.xml";
     let output_path = "output.txt";
 
     run_benchmark("parse_xml_cow", || {
         parse_xml_cow(input_path, output_path)?;
         Ok(())
     });
-    // Run benchmarks
-    run_benchmark("my_parser", || {
-        my_parser(input_path, output_path)?;
+
+    run_benchmark("parse_xml_cow_optimized", || {
+        parse_xml_cow_optimized(input_path, output_path)?;
         Ok(())
     });
 
-    run_benchmark("cow_parser", || {
-        cow_parser(input_path, output_path)?;
+    run_benchmark("my_parser", || {
+        my_parser(input_path, output_path)?;
         Ok(())
     });
 
@@ -392,11 +426,6 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         quick_xml(input_path, output_path)?;
         Ok(())
     });
-
-    // run_benchmark("parse_xml_cow", || {
-    //     parse_xml_cow(input_path, output_path)?;
-    //     Ok(())
-    // });
 
     Ok(())
 }
