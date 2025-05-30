@@ -25,7 +25,7 @@ pub fn start_parsing(reader : &mut BufReader<File>, writer : &mut BufWriter<File
                 buff_text.clear();
             }
         }
-        else if c == '>' {
+        else if c == '>' && is_inside_tag{
             is_inside_tag = false;
             process_tag(&buff_tag, writer);
             buff_tag.clear();

@@ -1,12 +1,1 @@
-Start: <kurs-java>
-Start: <artykul>
-Start: <tytul>
-Text: Wprowadzenie do XML w Javie
-End: </tytul>
-Start: <autor>
-Text: Marcin Pietraszek
-End: </autor>
-End: </artykul>
-Start: <opis>
-End: </opis>
-End: </kurs-java>
+Start: <FILE> [name="head.cmb"]
