@@ -5,7 +5,7 @@ use std::fs::File;
 use std::io::{BufRead, BufReader, BufWriter, Read, Write};
 
 fn main() -> std::io::Result<()> {
-    let input_path = "input.txt";
+    let input_path = "15mb.xml";
     let output_path = "output.txt";
 
     // plik wejściowy
