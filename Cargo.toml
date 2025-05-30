@@ -6,3 +6,5 @@ edition = "2024"
 [dependencies]
 xml-rs = "0.8"
 quick-xml = "0.31"
+sysinfo = "0.30"
+memory-stats = "1.0"

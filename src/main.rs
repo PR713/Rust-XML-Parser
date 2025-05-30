@@ -1,7 +1,3 @@
-
-mod parser;
-mod emitter;
-
 use std::borrow::Cow;
 use std::fs::File;
 use std::io::{BufRead, BufReader, BufWriter, Read, Write};
@@ -10,6 +6,50 @@ use quick_xml::events::Event;
 use quick_xml::Reader;
 use xml::EventReader;
 use xml::reader::XmlEvent;
+use memory_stats::memory_stats;
+
+mod parser;
+mod emitter;
+mod cow_parser;
+
+fn measure_memory() -> u64 {
+    if let Ok(usage) = std::process::Command::new("ps")
+        .args(&["-o", "rss=", &std::process::id().to_string()])
+        .output()
+    {
+        if let Ok(usage_str) = String::from_utf8(usage.stdout) {
+            return usage_str.trim().parse().unwrap_or(0);
+        }
+    }
+    0
+}
+
+fn run_benchmark<F>(name: &str, f: F)
+where
+    F: FnOnce() -> Result<(), Box<dyn std::error::Error>>,
+{
+    let before_mem = memory_stats().map(|stats| stats.physical_mem);
+    let start_time = Instant::now();
+
+    if let Err(e) = f() {
+        eprintln!("Error in {}: {}", name, e);
+    }
+
+    let duration = start_time.elapsed();
+    let after_mem = memory_stats().map(|stats| stats.physical_mem);
+
+    let mem_used = match (before_mem, after_mem) {
+        (Some(b), Some(a)) => a - b,
+        _ => 0,
+    };
+
+    println!("{}:", name);
+    println!("  Time: {:.2?}", duration);
+    println!("  Memory: {} KB", mem_used / 1024); // Konwersja na KB
+    println!("------------------------");
+}
+
+
 
 fn my_parser(input_path: &str, output_path: &str) -> std::io::Result<()> {
     let start = Instant::now();
@@ -23,6 +63,23 @@ fn my_parser(input_path: &str, output_path: &str) -> std::io::Result<()> {
     let mut writer = BufWriter::new(output_file);
 
     parser::start_parsing(&mut reader, &mut writer);
+    let duration = start.elapsed();
+    println!("Elapsed time: {:.2?}", duration);
+    Ok(())
+}
+
+fn cow_parser(input_path: &str, output_path: &str) -> std::io::Result<()> {
+    let start = Instant::now();
+
+    // plik wejściowy
+    let input_file = File::open(input_path)?;
+    let mut reader = BufReader::new(input_file);
+
+    // plik wyjściowy
+    let output_file = File::create(output_path)?;
+    let mut writer = BufWriter::new(output_file);
+
+    cow_parser::start_parsing_cow(&mut reader, &mut writer);
     let duration = start.elapsed();
     println!("Elapsed time: {:.2?}", duration);
     Ok(())
@@ -141,6 +198,7 @@ fn quick_xml(input_path: &str, output_path: &str) -> Result<(), Box<dyn std::err
 
 fn parse_xml_cow(input_path: &str, output_path: &str) -> std::io::Result<()> {
     let start = Instant::now();
+
     let input_file = File::open(input_path)?;
     let output_file = File::create(output_path)?;
 
@@ -154,41 +212,66 @@ fn parse_xml_cow(input_path: &str, output_path: &str) -> std::io::Result<()> {
     while i < bytes.len() {
         match bytes[i] {
             b'<' => {
-                // sprawdź czy to tag zamykający
-                if i + 1 < bytes.len() && bytes[i + 1] == b'/' {
+                // <?xml ... ?>
+                if i + 1 < bytes.len() && bytes[i + 1] == b'?' {
+                    i += 2;
+                    let start = i;
+                    while i + 1 < bytes.len() && !(bytes[i] == b'?' && bytes[i + 1] == b'>') {
+                        i += 1;
+                    }
+                    let content = Cow::Borrowed(buffer[start..i].trim());
+                    writeln!(writer, "Processing: <?{}?>", content)?;
+                    i += 2; // skip '?>'
+                }
+                // </end>
+                else if i + 1 < bytes.len() && bytes[i + 1] == b'/' {
                     i += 2;
                     let start = i;
                     while i < bytes.len() && bytes[i] != b'>' {
                         i += 1;
                     }
                     let end = i;
-                    let tag_name = Cow::Borrowed(&buffer[start..end]);
+                    let tag_name = Cow::Borrowed(buffer[start..end].trim());
                     writeln!(writer, "End: </{}>", tag_name)?;
                     i += 1; // skip '>'
-                } else {
+                }
+                // <start> lub <empty />
+                else {
                     i += 1;
                     let start = i;
-                    while i < bytes.len() && !bytes[i].is_ascii_whitespace() && bytes[i] != b'>' {
+                    while i < bytes.len()
+                        && !bytes[i].is_ascii_whitespace()
+                        && bytes[i] != b'>'
+                        && bytes[i] != b'/'
+                    {
                         i += 1;
                     }
                     let end = i;
-                    let tag_name = Cow::Borrowed(&buffer[start..end]);
+                    let tag_name = Cow::Borrowed(buffer[start..end].trim());
 
                     let mut attrs = Vec::new();
+                    let mut is_empty = false;
+
+                    // Atrybuty
                     while i < bytes.len() && bytes[i] != b'>' {
                         while i < bytes.len() && bytes[i].is_ascii_whitespace() {
                             i += 1;
                         }
 
-                        // attr name
+                        if i < bytes.len() && bytes[i] == b'/' {
+                            is_empty = true;
+                            i += 1;
+                            continue;
+                        }
+
                         let attr_start = i;
                         while i < bytes.len() && bytes[i] != b'=' {
                             i += 1;
                         }
-                        if i >= bytes.len() {
+                        if i >= bytes.len() || bytes[i] != b'=' {
                             break;
                         }
-                        let attr_key = Cow::Borrowed(&buffer[attr_start..i]);
+                        let attr_key = Cow::Borrowed(buffer[attr_start..i].trim());
                         i += 1; // skip '='
 
                         if i < bytes.len() && bytes[i] == b'"' {
@@ -197,7 +280,7 @@ fn parse_xml_cow(input_path: &str, output_path: &str) -> std::io::Result<()> {
                             while i < bytes.len() && bytes[i] != b'"' {
                                 i += 1;
                             }
-                            let attr_val = Cow::Borrowed(&buffer[val_start..i]);
+                            let attr_val = Cow::Borrowed(buffer[val_start..i].trim());
                             attrs.push(format!("{}=\"{}\"", attr_key, attr_val));
                             i += 1; // skip closing '"'
                         }
@@ -209,13 +292,20 @@ fn parse_xml_cow(input_path: &str, output_path: &str) -> std::io::Result<()> {
                         String::new()
                     };
 
-                    writeln!(writer, "Start: <{}>{}", tag_name, attr_str)?;
+                    if is_empty {
+                        writeln!(writer, "Empty: <{} />{}", tag_name, attr_str)?;
+                    } else {
+                        writeln!(writer, "Start: <{}>{}", tag_name, attr_str)?;
+                    }
 
-                    i += 1; // skip '>'
+                    if i < bytes.len() && bytes[i] == b'>' {
+                        i += 1; // skip '>'
+                    }
                 }
             }
 
             _ => {
+                // Tekst między tagami
                 let start = i;
                 while i < bytes.len() && bytes[i] != b'<' {
                     i += 1;
@@ -229,19 +319,42 @@ fn parse_xml_cow(input_path: &str, output_path: &str) -> std::io::Result<()> {
             }
         }
     }
+
     let duration = start.elapsed();
     println!("COW: Elapsed time: {:.2?}", duration);
     Ok(())
 }
 
+
 fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let start = Instant::now();
-    let input_path = "treebank_e.xml";
+    let input_path = "nasa.xml";
     let output_path = "output.txt";
 
-    my_parser(&input_path, &output_path)?;
-    xml_rs(&input_path, &output_path)?;
-    quick_xml(&input_path, &output_path)?;
-    parse_xml_cow(&input_path, &output_path)?;
+    // Run benchmarks
+    run_benchmark("my_parser", || {
+        my_parser(input_path, output_path)?;
+        Ok(())
+    });
+
+    run_benchmark("cow_parser", || {
+        cow_parser(input_path, output_path)?;
+        Ok(())
+    });
+
+    run_benchmark("xml-rs", || {
+        xml_rs(input_path, output_path)?;
+        Ok(())
+    });
+
+    run_benchmark("quick-xml", || {
+        quick_xml(input_path, output_path)?;
+        Ok(())
+    });
+
+    run_benchmark("parse_xml_cow", || {
+        parse_xml_cow(input_path, output_path)?;
+        Ok(())
+    });
+
     Ok(())
 }
