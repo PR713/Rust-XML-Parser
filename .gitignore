@@ -26,4 +26,4 @@ src/inputs/700mb.xml
 dblp.xml
 src/inputs/85mb.xml
 
-output.txt
+src/outputs/*

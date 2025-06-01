@@ -11,9 +11,8 @@ fn get_attributes(ref e: &BytesStart) -> HashMap<String, String> {
     let _ = e.attributes()
         .filter_map(|a| a.ok())
         .map(|a| {
-            let key = String::from_utf8_lossy(a.key.as_ref()).to_string();
-            let value = a.unescape_value().unwrap_or_default().into_owned();
-            attrs.insert(key, value);
+            attrs.insert(String::from_utf8_lossy(a.key.as_ref()).to_string(),
+                         a.unescape_value().unwrap_or_default().into_owned());
         });
     attrs
 }
@@ -29,6 +28,7 @@ pub fn parse(input_path: &str, output_path: &str) -> Result<(), Box<dyn Error>> 
         match reader.read_event_into(&mut buf) {
             Ok(Event::Start(ref e)) => {
                 let tag_name = String::from_utf8_lossy(e.name().as_ref()).to_string();
+
                 emitter::start_tag(&mut writer, &tag_name, &get_attributes(e))?;
             }
             Ok(Event::Text(e)) => {
