@@ -22,8 +22,8 @@
 *.o
 *.a
 
-psd7003.xml
+src/inputs/700mb.xml
 dblp.xml
-treebank_e.xml
+src/inputs/85mb.xml
 
 output.txt

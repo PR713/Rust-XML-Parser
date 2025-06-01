@@ -8,31 +8,30 @@ mod benchmark;
 mod parsers;
 
 fn main() -> Result<(), Box<dyn Error>> {
-    let input_path = "treebank_e.xml";
-    let output_path = "output.txt";
+    let input_path = "src/inputs/25mb.xml";
 
     run_benchmark("parse_xml_cow", || {
-        parse_xml_cow::parse(input_path, output_path)?;
+        parse_xml_cow::parse(input_path, "src/outputs/cow.txt")?;
         Ok(())
     })?;
 
     run_benchmark("parse_xml_cow_optimized", || {
-        parse_xml_cow_optimized::parse(input_path, output_path)?;
+        parse_xml_cow_optimized::parse(input_path, "src/outputs/cow_optimized.txt")?;
         Ok(())
     })?;
 
     run_benchmark("my_parser", || {
-        my_parser::parse(input_path, output_path)?;
+        my_parser::parse(input_path, "src/outputs/my_parser.txt")?;
         Ok(())
     })?;
 
     run_benchmark("xml-rs", || {
-        xml_rs::parse(input_path, output_path)?;
+        xml_rs::parse(input_path, "src/outputs/xml-rs.txt")?;
         Ok(())
     })?;
 
     run_benchmark("quick-xml", || {
-        quick_xml::parse(input_path, output_path)?;
+        quick_xml::parse(input_path, "src/outputs/quick-xml.txt")?;
         Ok(())
     })?;
 
