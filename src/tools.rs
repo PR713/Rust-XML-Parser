@@ -30,6 +30,5 @@ pub fn get_attributes(parts: &[&str]) -> HashMap<String, String> {
             map.insert(k.to_string(), v.to_string());
         }
     }
-
     map
 }

@@ -1,5 +1,3 @@
-use std::io::Write;
-
 use crate::emitter;
 use std::collections::HashMap;
 use std::fs::File;
@@ -32,6 +30,5 @@ pub fn parse(input_path: &str, output_path: &str) -> Result<(), Box<dyn std::err
             _ => {}
         }
     }
-
     Ok(())
 }

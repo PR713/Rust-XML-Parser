@@ -1,11 +1,10 @@
 use crate::{emitter, tools};
 use std::fs::File;
-use std::io::{BufReader, BufWriter, Read, Write};
+use std::io::{BufWriter, Read};
 
 pub fn parse(input_path: &str, output_path: &str) -> std::io::Result<()> {
     let mut input_file = File::open(input_path)?;
     let output_file = File::create(output_path)?;
-
     let mut writer = BufWriter::new(output_file);
     let mut buffer = String::new();
     input_file.read_to_string(&mut buffer)?;
@@ -15,7 +14,6 @@ pub fn parse(input_path: &str, output_path: &str) -> std::io::Result<()> {
 }
 
 fn start_parsing(buffer: &str, writer: &mut BufWriter<File>) -> std::io::Result<()> {
-
     let mut buff_tag = String::new();
     let mut buff_text = String::new();
     let mut is_inside_tag = false;
@@ -35,13 +33,8 @@ fn start_parsing(buffer: &str, writer: &mut BufWriter<File>) -> std::io::Result<
         } else if is_inside_tag {
             buff_tag.push(c);
         } else {
-
-
             buff_text.push(c);
-
         }
     }
-
-
     Ok(())
 }

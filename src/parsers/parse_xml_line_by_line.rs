@@ -1,4 +1,3 @@
-use std::collections::HashMap;
 use std::fs::File;
 use std::io::{BufRead, BufReader, BufWriter};
 use crate::emitter;
@@ -49,8 +48,5 @@ pub fn start_parsing(
         }
 
     }
-
-
-
     Ok(())
 }

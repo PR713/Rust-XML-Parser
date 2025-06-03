@@ -4,7 +4,15 @@ use std::thread;
 use std::time::{Duration, Instant};
 use sysinfo::System;
 
-pub fn run_benchmark<F>(name: &str, f: F) -> Result<Duration, Box<dyn Error>>
+#[derive(Debug)]
+pub struct BenchmarkResult {
+    pub name: String,
+    pub duration: Duration,
+    pub memory_used_kb: u64,
+    pub peak_memory_kb: u64
+}
+
+pub fn run_benchmark<F>(name: &str, f: F) -> Result<BenchmarkResult, Box<dyn Error>>
 where
     F: FnOnce() -> Result<(), Box<dyn Error>>,
 {
@@ -33,8 +41,6 @@ where
 
                     // Wypisuj co 100ms
                     if last_print.elapsed() > Duration::from_millis(100) {
-                        // println!("[MEM] Current: {} KB, Peak: {} KB",
-                        //          current_mem, *max_mem);
                         last_print = Instant::now();
                     }
                 }
@@ -53,7 +59,7 @@ where
     };
 
     let start_time = Instant::now();
-    let result = f();
+    f()?;
     let duration = start_time.elapsed();
 
     // Zatrzymaj wątek monitorujący
@@ -64,15 +70,20 @@ where
     let final_max_memory = *max_memory.lock().unwrap();
     let memory_used_kb = final_max_memory.saturating_sub(initial_memory);
 
-    // Wydruk wyników
     println!("\n╔═════════════════════════════════════════════════════════════════════╗");
     println!("║ {:^26} ║", name);
     println!("╠═════════════════════════════════════════════════════════════════════");
     println!("║ {:<12}: {:>10.2?}                                                   ", "Time", duration);
-    println!("║ {:<12}: {:>10} KB   ", "RAM Memory (diff between the start and the end", memory_used_kb);
+    println!("║ {:<12}: {:>10} KB ", "RAM Memory (diff between the start and the end)", memory_used_kb);
     println!("║                                                                     " );
     println!("║ {:<12}: {:>10} KB                                                   ", "Peak RAM", final_max_memory);
     println!("╚═════════════════════════════════════════════════════════════════════╝");
 
-    result.map(|_| duration)
+
+    Ok(BenchmarkResult {
+        name: name.to_string(),
+        duration,
+        memory_used_kb,
+        peak_memory_kb: final_max_memory,
+    })
 }
