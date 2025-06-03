@@ -6,9 +6,10 @@ use crate::parsers::*;
 mod emitter;
 mod benchmark;
 mod parsers;
+mod tools;
 
 fn main() -> Result<(), Box<dyn Error>> {
-    let input_path = "src/inputs/test";
+    let input_path = "src/inputs/25mb.xml";
     run_benchmark("parse_xml_whole_file", || {
         parse_xml_whole_file::parse(input_path, "src/outputs/parse_xml_whole_file.txt")?;
         Ok(())
@@ -24,15 +25,15 @@ fn main() -> Result<(), Box<dyn Error>> {
         Ok(())
     })?;
 
-    // run_benchmark("xml-rs", || {
-    //     xml_rs::parse(input_path, "src/outputs/xml-rs.txt")?;
-    //     Ok(())
-    // })?;
-    //
-    // run_benchmark("quick-xml", || {
-    //     quick_xml::parse(input_path, "src/outputs/quick-xml.txt")?;
-    //     Ok(())
-    // })?;
+    run_benchmark("xml-rs", || {
+        xml_rs::parse(input_path, "src/outputs/xml-rs.txt")?;
+        Ok(())
+    })?;
+
+    run_benchmark("quick-xml", || {
+        quick_xml::parse(input_path, "src/outputs/quick-xml.txt")?;
+        Ok(())
+    })?;
 
     Ok(())
 }

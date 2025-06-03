@@ -1,4 +1,4 @@
-use crate::emitter;
+use crate::{emitter, tools};
 use std::collections::HashMap;
 use std::fs::File;
 use std::io::{BufReader, BufWriter, Read};
@@ -33,7 +33,7 @@ fn start_parsing(
             }
         } else if c == '>' && is_inside_tag {
             is_inside_tag = false;
-            process_tag(&buff_tag, writer)?;
+            tools::process_tag(&buff_tag, writer)?;
             buff_tag.clear();
         } else if is_inside_tag {
             buff_tag.push(c);
@@ -47,33 +47,4 @@ fn start_parsing(
     Ok(())
 }
 
-fn process_tag(buff_tag: &String, writer: &mut BufWriter<File>) -> std::io::Result<()> {
-    let mut parts = buff_tag.split_whitespace().collect::<Vec<&str>>();
 
-    if buff_tag.starts_with('/') {
-        //np </div>
-        emitter::end_tag(writer, &buff_tag[1..])?;
-    } else if buff_tag.ends_with('/') {
-        // <img src="" alt="" />
-        let attr = get_attributes(&parts[1..parts.len()]);
-        emitter::start_tag(writer, &parts[0], &attr)?;
-        emitter::end_tag(writer, &parts[0])?;
-    } else {
-        // <div id="">
-        let attr = get_attributes(&parts[1..parts.len()]);
-        emitter::start_tag(writer, &parts[0], &attr)?;
-    }
-    Ok(())
-}
-
-fn get_attributes(parts: &[&str]) -> HashMap<String, String> {
-    let mut map: HashMap<String, String> = HashMap::new();
-
-    for part in parts {
-        if let Some((k, v)) = part.split_once('=') {
-            map.insert(k.to_string(), v.to_string());
-        }
-    }
-
-    map
-}
