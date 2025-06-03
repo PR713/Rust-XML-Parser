@@ -21,16 +21,12 @@ fn start_parsing(
     let mut buff_text = String::new();
 
     let mut is_inside_tag = false;
-
     for byte in reader.bytes() {
-        let c = byte.unwrap() as char;
-
-        if c == '\n' || c == '\r' || c == '\t' {
-            continue;
-        }
+        let c = byte? as char;
 
         if c == '<' {
             is_inside_tag = true;
+            buff_text = buff_text.trim().to_string();
             if !buff_text.is_empty() {
                 emitter::text(writer, &buff_text)?;
                 buff_text.clear();
@@ -42,7 +38,10 @@ fn start_parsing(
         } else if is_inside_tag {
             buff_tag.push(c);
         } else {
+
+
             buff_text.push(c);
+
         }
     }
     Ok(())
