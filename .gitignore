@@ -23,7 +23,6 @@
 *.a
 
 src/inputs/700mb.xml
-dblp.xml
-src/inputs/85mb.xml
+
 
 src/outputs/*

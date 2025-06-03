@@ -3,7 +3,7 @@ use plotters::style::text_anchor::{HPos, Pos, VPos};
 use crate::benchmark::BenchmarkResult;
 
 pub fn generate_plot(results: &[BenchmarkResult]) -> Result<(), Box<dyn std::error::Error>> {
-    let root = BitMapBackend::new("benchmark_results.png", (1200, 800)).into_drawing_area();
+    let root = BitMapBackend::new("benchmark_results25mb.png", (1200, 800)).into_drawing_area();
     root.fill(&WHITE)?;
 
     let max_memory = results
@@ -31,7 +31,7 @@ pub fn generate_plot(results: &[BenchmarkResult]) -> Result<(), Box<dyn std::err
     chart
         .configure_mesh()
         .x_labels(results.len() + 2)
-        .y_desc("Memory Used (KB)")
+        .y_desc("Mem Used (KB)")
         .y_labels(results.len() + 2)
         .label_style(("sans-serif", 16))
         .disable_x_mesh()

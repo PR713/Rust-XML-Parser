@@ -11,7 +11,7 @@ mod tools;
 mod generate_plot;
 
 fn main() -> Result<(), Box<dyn Error>> {
-    let input_path = "src/inputs/test";
+    let input_path = "src/inputs/25mb.xml";
     let mut results = Vec::new();
 
     results.push(run_benchmark("whole_file", || {
@@ -39,8 +39,11 @@ fn main() -> Result<(), Box<dyn Error>> {
         Ok(())
     })?);
 
-    generate_plot(&results)?;
+    if results.is_empty() {
+        return Err(Box::from("no results"));
+    }
 
+    generate_plot(&results)?;
     Ok(())
 }
 

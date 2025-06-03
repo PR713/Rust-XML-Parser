@@ -1,5 +1,4 @@
 use crate::{emitter, tools};
-use std::collections::HashMap;
 use std::fs::File;
 use std::io::{BufReader, BufWriter, Read};
 

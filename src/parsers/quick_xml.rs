@@ -6,11 +6,11 @@ use quick_xml::events::{BytesStart, Event};
 use quick_xml::Reader;
 use crate::emitter;
 
-fn get_attributes(ref e: &BytesStart) -> HashMap<String, String> {
+fn get_attributes(e: &BytesStart) -> HashMap<String, String> {
     let mut attrs = HashMap::new();
     let _ = e.attributes()
         .filter_map(|a| a.ok())
-        .map(|a| {
+        .for_each(|a| {
             attrs.insert(String::from_utf8_lossy(a.key.as_ref()).to_string(),
                          a.unescape_value().unwrap_or_default().into_owned());
         });
