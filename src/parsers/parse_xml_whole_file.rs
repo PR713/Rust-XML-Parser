@@ -1,8 +1,8 @@
 use crate::emitter;
 use std::collections::HashMap;
 use std::fs::File;
-use std::io::{BufReader, BufWriter, Read, Write};
-//todo poprawka atrybutów
+use std::io::{BufReader, BufWriter, Read};
+
 pub fn parse(input_path: &str, output_path: &str) -> std::io::Result<()> {
     let input_file = File::open(input_path)?;
     let output_file = File::create(output_path)?;

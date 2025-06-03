@@ -6,6 +6,7 @@ use crate::parsers::*;
 mod emitter;
 mod benchmark;
 mod parsers;
+mod tools;
 
 fn main() -> Result<(), Box<dyn Error>> {
     let input_path = "src/inputs/test";

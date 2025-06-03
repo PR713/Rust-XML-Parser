@@ -26,3 +26,4 @@ pub fn end_tag<W: Write>(writer: &mut W, name: &str) -> std::io::Result<()> {
 pub fn text<W: Write>(writer: &mut W, text: &str) -> std::io::Result<()>{
     writeln!(writer, r#"{{"type":"text","content":"{}"}}"#, text)
 }
+

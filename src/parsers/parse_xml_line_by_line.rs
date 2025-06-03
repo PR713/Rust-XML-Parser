@@ -1,7 +1,7 @@
-use std::collections::HashMap;
 use std::fs::File;
 use std::io::{BufRead, BufReader, BufWriter};
 use crate::emitter;
+use crate::tools;
 
 pub fn parse(input_path: &str, output_path: &str) -> std::io::Result<()> {
     let input_file = File::open(input_path)?;
@@ -28,30 +28,8 @@ pub fn parse(input_path: &str, output_path: &str) -> std::io::Result<()> {
 
                 // Process the tag
                 let tag_str = tag_buffer.trim();
-                if tag_str.starts_with("</") {
-                    // End tag
-                    let tag_name = tag_str[2..tag_str.len()-1].trim();
-                    emitter::end_tag(&mut writer, tag_name)?;
-                } else {
-                    // Start tag
-                    let inside = &tag_str[1..tag_str.len() - 1];
-                    let mut parts = inside.split_whitespace();
-                    if let Some(tag_name) = parts.next() {
-                        let mut attributes = HashMap::new();
+                tools::process_tag(&mut tag_str[1 ..tag_str.len() - 1].to_string(), &mut writer)?;
 
-                        for attr in parts {
-                            if let Some(eq_pos) = attr.find('=') {
-                                let key = &attr[..eq_pos];
-                                let value = &attr[eq_pos+1..]
-                                    .trim_matches('"')
-                                    .trim_matches('\'');
-                                attributes.insert(key.to_string(), value.to_string());
-                            }
-                        }
-
-                        emitter::start_tag(&mut writer, tag_name, &attributes)?;
-                    }
-                }
             } else {
                 // Text between tags
                 let text_start = i;
