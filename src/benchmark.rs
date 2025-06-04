@@ -32,14 +32,13 @@ where
             while !*should_stop.lock().unwrap() {
                 system.refresh_process(pid);
                 if let Some(process) = system.process(pid) {
-                    let current_mem = process.memory() / 1024; // KB
+                    let current_mem = process.memory() / 1024;
                     let mut max_mem = max_memory.lock().unwrap();
 
                     if current_mem > *max_mem {
                         *max_mem = current_mem;
                     }
 
-                    // Wypisuj co 100ms
                     if last_print.elapsed() > Duration::from_millis(100) {
                         last_print = Instant::now();
                     }

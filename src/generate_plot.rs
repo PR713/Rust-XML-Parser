@@ -3,7 +3,7 @@ use plotters::style::text_anchor::{HPos, Pos, VPos};
 use crate::benchmark::BenchmarkResult;
 
 pub fn generate_plot(results: &[BenchmarkResult]) -> Result<(), Box<dyn std::error::Error>> {
-    let root = BitMapBackend::new("benchmark_results25mb.png", (1200, 800)).into_drawing_area();
+    let root = BitMapBackend::new("benchmark_results85mb.png", (1200, 800)).into_drawing_area();
     root.fill(&WHITE)?;
 
     let max_memory = results
@@ -87,7 +87,7 @@ pub fn generate_plot(results: &[BenchmarkResult]) -> Result<(), Box<dyn std::err
     for (i, r) in results.iter().enumerate() {
         root.draw(&Text::new(
             r.name.clone(),
-            (160 + i as i32 * 220, 780), // 👈 pozycja na ekranie w pikselach
+            (160 + i as i32 * 220, 780),
             ("sans-serif", 20)
                 .into_font()
                 .color(&BLACK)

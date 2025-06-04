@@ -11,7 +11,7 @@ mod tools;
 mod generate_plot;
 
 fn main() -> Result<(), Box<dyn Error>> {
-    let input_path = "src/inputs/25mb.xml";
+    let input_path = "src/inputs/85mb.xml";
     let mut results = Vec::new();
 
     results.push(run_benchmark("whole_file", || {
