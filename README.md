@@ -61,7 +61,6 @@ src/
 - Obsługa większej liczby formatów wejściowych
 - Dodanie walidacji XML Schema
 - Implementacja parsowania strumieniowego
-- Wsparcie dla namespace'ów XML
 - Optymalizacje dla bardzo dużych plików (>1GB)
 
 
